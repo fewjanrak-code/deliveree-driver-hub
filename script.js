@@ -370,7 +370,7 @@ function handleSubmissionFailure(error) {
 function renderResult(matchStatus) {
   const result = getResultCopy(matchStatus);
   elements.resultIcon.textContent = result.icon;
-  elements.resultIcon.classList.toggle('error', Boolean(result.isError));
+  elements.resultIcon.className = 'result-icon tone-' + result.tone;
   elements.resultContent.innerHTML = '<h2>' + escapeHtml(result.thaiTitle) + '</h2>' +
     '<h3>' + escapeHtml(result.englishTitle) + '</h3>' +
     '<p>' + escapeHtml(result.thaiMessage) + '</p>' +
@@ -378,38 +378,72 @@ function renderResult(matchStatus) {
   resetResultButton();
 }
 
+/**
+ * Each status maps to its own icon + tone so drivers can tell results apart
+ * at a glance. Tones map to CSS classes in style.css:
+ *   success (green)  - matched, nothing wrong
+ *   info    (blue)   - no record found; not an error, just a new applicant
+ *   warning (amber)  - needs a human to look at it
+ *   danger  (red)    - blocked / cannot proceed
+ */
 function getResultCopy(matchStatus) {
   const results = {
-    'No Match': ['✓', 'ไม่พบประวัติการสมัครของคุณ', 'No previous application record was found',
-      'กรุณากลับไปที่แชท LINE เพื่อดำเนินการสมัครใหม่',
-      'Please return to the LINE chat to continue with a new application.'],
-    'Existing Applicant': ['✓', 'พบข้อมูลการสมัครของคุณแล้ว', 'Your application record was found',
-      'กรุณากลับไปที่แชท LINE เพื่อดำเนินการต่อ',
-      'Please return to the LINE chat to continue your application.'],
-    'Approved Driver': ['✓', 'พบข้อมูลผู้ขับของคุณแล้ว', 'Your approved driver record was found',
-      'กรุณากลับไปที่แชท LINE เพื่อดำเนินการต่อ',
-      'Please return to the LINE chat to continue.'],
-    'Returning Driver': ['✓', 'พบข้อมูลผู้ขับเดิมของคุณแล้ว', 'Your previous driver record was found',
-      'กรุณากลับไปที่แชท LINE เพื่อดำเนินการกลับมารับงานอีกครั้ง',
-      'Please return to the LINE chat to continue the return-to-drive process.'],
-    'Banned Driver': ['!', 'ไม่สามารถดำเนินการสมัครได้', 'Unable to continue the application',
-      'กรุณากลับไปที่แชท LINE เพื่อขอความช่วยเหลือ',
-      'Please return to the LINE chat for assistance.', true],
-    'Duplicate Drivers': ['!', 'จำเป็นต้องตรวจสอบข้อมูลเพิ่มเติม', 'Additional review is required',
-      'กรุณากลับไปที่แชท LINE เพื่อให้เจ้าหน้าที่ช่วยตรวจสอบ',
-      'Please return to the LINE chat for manual assistance.', true],
-    'Manual Review Required': ['!', 'จำเป็นต้องตรวจสอบข้อมูลเพิ่มเติม', 'Additional review is required',
-      'กรุณากลับไปที่แชท LINE เพื่อให้เจ้าหน้าที่ช่วยตรวจสอบ',
-      'Please return to the LINE chat for manual assistance.', true]
+    'No Match': {
+      icon: 'i', tone: 'info',
+      thaiTitle: 'ไม่พบประวัติการสมัครของคุณ',
+      englishTitle: 'No previous application record was found',
+      thaiMessage: 'กรุณากลับไปที่แชท LINE เพื่อดำเนินการสมัครใหม่',
+      englishMessage: 'Please return to the LINE chat to continue with a new application.'
+    },
+    'Existing Applicant': {
+      icon: '✓', tone: 'success',
+      thaiTitle: 'พบข้อมูลการสมัครของคุณแล้ว',
+      englishTitle: 'Your application record was found',
+      thaiMessage: 'กรุณากลับไปที่แชท LINE เพื่อดำเนินการต่อ',
+      englishMessage: 'Please return to the LINE chat to continue your application.'
+    },
+    'Approved Driver': {
+      icon: '✓', tone: 'success',
+      thaiTitle: 'พบข้อมูลผู้ขับของคุณแล้ว',
+      englishTitle: 'Your approved driver record was found',
+      thaiMessage: 'กรุณากลับไปที่แชท LINE เพื่อดำเนินการต่อ',
+      englishMessage: 'Please return to the LINE chat to continue.'
+    },
+    'Returning Driver': {
+      icon: '↻', tone: 'success',
+      thaiTitle: 'พบข้อมูลผู้ขับเดิมของคุณแล้ว',
+      englishTitle: 'Your previous driver record was found',
+      thaiMessage: 'กรุณากลับไปที่แชท LINE เพื่อดำเนินการกลับมารับงานอีกครั้ง',
+      englishMessage: 'Please return to the LINE chat to continue the return-to-drive process.'
+    },
+    'Banned Driver': {
+      icon: '✕', tone: 'danger',
+      thaiTitle: 'บัญชีของคุณถูกระงับการใช้งาน',
+      englishTitle: 'Your account is suspended',
+      thaiMessage: 'กรุณาติดต่อเจ้าหน้าที่ผ่านแชท LINE',
+      englishMessage: 'Please contact the staff via LINE.'
+    },
+    'Duplicate Drivers': {
+      icon: '⧉', tone: 'warning',
+      thaiTitle: 'พบข้อมูลซ้ำในระบบ',
+      englishTitle: 'Duplicate records were found',
+      thaiMessage: 'กรุณากลับไปที่แชท LINE เพื่อให้เจ้าหน้าที่ตรวจสอบข้อมูลซ้ำ',
+      englishMessage: 'Please return to the LINE chat so our team can review the duplicate records.'
+    },
+    'Manual Review Required': {
+      icon: '!', tone: 'warning',
+      thaiTitle: 'จำเป็นต้องตรวจสอบข้อมูลเพิ่มเติม',
+      englishTitle: 'Additional review is required',
+      thaiMessage: 'กรุณากลับไปที่แชท LINE เพื่อให้เจ้าหน้าที่ช่วยตรวจสอบ',
+      englishMessage: 'Please return to the LINE chat for manual assistance.'
+    }
   };
-  const v = results[matchStatus] || results['Manual Review Required'];
-  return { icon: v[0], thaiTitle: v[1], englishTitle: v[2],
-    thaiMessage: v[3], englishMessage: v[4], isError: Boolean(v[5]) };
+  return results[matchStatus] || results['Manual Review Required'];
 }
 
 function renderErrorResult() {
-  elements.resultIcon.textContent = '!';
-  elements.resultIcon.classList.add('error');
+  elements.resultIcon.textContent = '✕';
+  elements.resultIcon.className = 'result-icon tone-danger';
   elements.resultContent.innerHTML = '<h2>ไม่สามารถส่งข้อมูลได้</h2>' +
     '<h3>Unable to submit information</h3>' +
     '<p>เกิดข้อผิดพลาดขณะส่งข้อมูล กรุณากลับไปที่แชท LINE เพื่อลองอีกครั้ง</p>' +
