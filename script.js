@@ -8,16 +8,34 @@ const LINE_OA_CHAT_URL =
 // (doPost). Update this if you redeploy and get a new URL. It does NOT need
 // to be the same URL this page is hosted on anymore.
 const API_ENDPOINT =
-  'https://script.google.com/macros/s/AKfycbypNB3Ijjj8-FWdsD1IHMeBqHVU_qaPxzquLFJF_fwPa7-W_I-a37uyB7UbBjwoeKCP/exec';
+  'https://script.google.com/a/macros/deliveree.com/s/AKfycbypNB3lJjj8-FWdsD1IHMeBqHVU_qaPxzquLFJF_fwPa7-W_I-a37uyB7UbBjwoeKCP/exec';
 
 const appState = {
   lineUserId: '', lineDisplayName: '', linePictureUrl: '', language: '',
   campaignSource: 'Unknown', accessChannel: 'Web', liffAccessToken: '',
-  isLiffReady: false
+  isLiffReady: false, pendingRecordId: ''
 };
 let elements = {};
 
 document.addEventListener('DOMContentLoaded', initializeApp);
+
+/**
+ * Builds a Record ID matching Code.gs's expected format
+ * (DJH-yyyyMMdd-HHmmss-XXXXXX) up front, before the first submit attempt.
+ * Reusing the same ID on every retry lets the server's existing
+ * find-by-recordId logic return the already-saved result instead of
+ * creating a duplicate row if a slow request gets retried.
+ */
+function generateClientRecordId() {
+  const now = new Date();
+  const pad = function (n, len) { return String(n).padStart(len || 2, '0'); };
+  const datePart = '' + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate());
+  const timePart = pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
+  const hex = Array.from({ length: 6 }, function () {
+    return '0123456789ABCDEF'[Math.floor(Math.random() * 16)];
+  }).join('');
+  return 'DJH-' + datePart + '-' + timePart + '-' + hex;
+}
 
 async function initializeApp() {
   cacheElements();
@@ -254,6 +272,9 @@ function handleFormSubmit(event) {
   }
 
   const phoneLocal = elements.phoneNumber.value;
+  if (!appState.pendingRecordId) {
+    appState.pendingRecordId = generateClientRecordId();
+  }
   const payload = {
     lineUserId: appState.lineUserId,
     lineDisplayName: appState.lineDisplayName,
@@ -262,6 +283,7 @@ function handleFormSubmit(event) {
     campaignSource: appState.campaignSource,
     accessChannel: appState.accessChannel,
     liffAccessToken: appState.liffAccessToken,
+    recordId: appState.pendingRecordId,
     title: elements.title.value,
     firstName: cleanText(elements.firstName.value),
     lastName: cleanText(elements.lastName.value),
@@ -281,18 +303,34 @@ function handleFormSubmit(event) {
  * Calls the Apps Script doPost endpoint directly. text/plain avoids a CORS
  * preflight request, which Apps Script Web Apps don't handle — this must
  * match how Code.gs's doPost() parses event.postData.contents as JSON.
+ * Wrapped in a timeout so a stalled request fails visibly instead of
+ * spinning on the processing screen forever.
  */
 function submitDriverInformation(payload) {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(function () {
+    controller.abort();
+  }, 25000);
+
   return fetch(API_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    signal: controller.signal
   })
     .then(function (response) {
+      window.clearTimeout(timeoutId);
       if (!response.ok) {
         throw new Error('Network response was not OK (' + response.status + ').');
       }
       return response.json();
+    })
+    .catch(function (error) {
+      window.clearTimeout(timeoutId);
+      if (error && error.name === 'AbortError') {
+        throw new Error('SUBMIT_TIMEOUT');
+      }
+      throw error;
     });
 }
 
