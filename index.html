@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1"
+  >
+  <title>Deliveree Driver Hub</title>
+
+  <!-- LINE LIFF SDK: must load before script.js uses window.liff. -->
+  <script
+    charset="utf-8"
+    src="https://static.line-scdn.net/liff/edge/2/sdk.js"
+  ></script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <main class="app-shell">
+
+    <!-- SCREEN 1: WELCOME -->
+    <section id="welcomeScreen" class="screen welcome-screen active">
+      <div class="welcome-brand">
+        <img
+          src="https://drive.google.com/thumbnail?id=1RNZiwsId_kF_nO0E5mo-gDpNYPLcr69x&sz=w1000"
+          alt="Deliveree"
+          class="welcome-logo"
+        >
+      </div>
+
+      <div class="welcome-icon" aria-hidden="true">🚚</div>
+
+      <h1>ยินดีต้อนรับสู่ Deliveree Driver Hub</h1>
+
+      <p class="thai-description">
+        กรุณากรอกข้อมูลเบื้องต้นเพื่อให้เราตรวจสอบ
+        <br>
+        และแนะนำขั้นตอนที่เหมาะสมสำหรับคุณ
+      </p>
+
+      <div class="language-divider"></div>
+
+      <p class="english-description">
+        <strong>Welcome to Deliveree Driver Hub</strong>
+        <span>
+          Please provide your basic information so we can check your status
+          and guide you to the right next step.
+        </span>
+      </p>
+
+      <div id="startupMessage" class="form-message" role="alert"></div>
+
+      <button
+        id="getStartedButton"
+        type="button"
+        class="primary-button welcome-button"
+        disabled
+      >
+        กำลังเชื่อมต่อ LINE... (Connecting to LINE...)
+      </button>
+    </section>
+
+    <!-- SCREEN 2: FORM -->
+    <section id="formScreen" class="screen">
+      <header class="screen-header">
+        <button
+          id="backToWelcomeButton"
+          type="button"
+          class="back-button"
+          aria-label="กลับ (Back)"
+        >
+          ‹
+        </button>
+
+        <div class="screen-title">
+          <h2>ข้อมูลเบื้องต้น</h2>
+          <p>Basic Information</p>
+        </div>
+
+        <img
+          src="https://drive.google.com/thumbnail?id=124bs_N_coKZhZVjathbBu2eqtH1udf9p&sz=w500"
+          alt="Deliveree Driver"
+          class="header-logo"
+        >
+      </header>
+
+      <form id="driverForm" novalidate>
+        <div class="field-group">
+          <label for="title">
+            คำนำหน้าชื่อ <span>(Title)</span>
+          </label>
+          <select id="title" name="title" required>
+            <option value="" selected disabled hidden>
+              กรุณาเลือกคำนำหน้าชื่อ (Select Title)
+            </option>
+            <option value="นาย">นาย</option>
+            <option value="นาง">นาง</option>
+            <option value="นางสาว">นางสาว</option>
+          </select>
+          <p id="titleError" class="field-error"></p>
+        </div>
+
+        <div class="field-group">
+          <label for="firstName">
+            ชื่อ <span>(First Name)</span>
+          </label>
+          <input
+            id="firstName"
+            name="firstName"
+            type="text"
+            autocomplete="given-name"
+            maxlength="100"
+            placeholder="กรุณากรอกชื่อ (Please enter your first name)"
+            required
+          >
+          <p id="firstNameError" class="field-error"></p>
+        </div>
+
+        <div class="field-group">
+          <label for="lastName">
+            นามสกุล <span>(Last Name)</span>
+          </label>
+          <input
+            id="lastName"
+            name="lastName"
+            type="text"
+            autocomplete="family-name"
+            maxlength="100"
+            placeholder="กรุณากรอกนามสกุล (Please enter your last name)"
+            required
+          >
+          <p id="lastNameError" class="field-error"></p>
+        </div>
+
+        <div class="field-group">
+          <label for="phoneNumber">
+            เบอร์โทรศัพท์ <span>(Phone Number)</span>
+          </label>
+          <input
+            id="phoneNumber"
+            name="phoneNumber"
+            type="tel"
+            inputmode="numeric"
+            autocomplete="tel"
+            minlength="10"
+            maxlength="10"
+            pattern="0[0-9]{9}"
+            placeholder="ตัวอย่าง: 0812345678 (Example: 0812345678)"
+            required
+          >
+          <p class="field-helper">
+            กรุณากรอกตัวเลข 10 หลัก โดยขึ้นต้นด้วย 0
+            <br>
+            Please enter 10 digits beginning with 0.
+          </p>
+          <p id="phoneNumberError" class="field-error"></p>
+        </div>
+
+        <div id="formMessage" class="form-message" role="alert"></div>
+
+        <button
+          id="submitButton"
+          type="submit"
+          class="primary-button"
+          disabled
+        >
+          ตรวจสอบข้อมูล (Check Information)
+        </button>
+      </form>
+    </section>
+
+    <!-- SCREEN 3: PROCESSING -->
+    <section id="processingScreen" class="screen processing-screen">
+      <img
+        src="https://drive.google.com/thumbnail?id=1RNZiwsId_kF_nO0E5mo-gDpNYPLcr69x&sz=w1000"
+        alt="Deliveree"
+        class="process-result-logo processing-logo"
+      >
+      <div class="spinner" aria-hidden="true"></div>
+      <h2>
+        กำลังตรวจสอบข้อมูลของคุณ
+        <span>Checking your information</span>
+      </h2>
+      <p>
+        กรุณารอสักครู่
+        <span>Please wait a moment</span>
+      </p>
+    </section>
+
+    <!-- SCREEN 4: RESULT -->
+    <section id="resultScreen" class="screen result-screen">
+      <img
+        src="https://drive.google.com/thumbnail?id=1RNZiwsId_kF_nO0E5mo-gDpNYPLcr69x&sz=w1000"
+        alt="Deliveree"
+        class="process-result-logo result-logo"
+      >
+      <div id="resultIcon" class="result-icon" aria-hidden="true">✓</div>
+      <div id="resultContent"></div>
+      <button
+        id="resultActionButton"
+        type="button"
+        class="primary-button"
+      >
+        กลับไปที่แชท LINE (Return to LINE Chat)
+      </button>
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
