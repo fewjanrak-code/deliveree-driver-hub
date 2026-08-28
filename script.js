@@ -325,7 +325,7 @@ function submitDriverInformation(payload) {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(function () {
     controller.abort();
-  }, 25000);
+  }, 90000);
 
   return fetch(API_ENDPOINT, {
     method: 'POST',
