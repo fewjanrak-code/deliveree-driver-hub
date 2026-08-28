@@ -52,8 +52,22 @@ async function initializeApp() {
   }
   elements.getStartedButton.disabled = false;
   elements.getStartedButton.textContent = 'เริ่มต้นใช้งาน (Get Started)';
-  elements.submitButton.disabled = false;
   elements.startupMessage.textContent = '';
+  updateSubmitButtonState();
+}
+
+/**
+ * Re-checks every field WITHOUT showing error messages (silent mode) and
+ * enables the submit button only when all four are valid. Called on every
+ * keystroke/selection so the button reflects live form completeness rather
+ * than only being checked at click time.
+ */
+function updateSubmitButtonState() {
+  const allValid = validateTitle(false) &&
+    validateFirstName(false) &&
+    validateLastName(false) &&
+    validatePhoneNumber(false);
+  elements.submitButton.disabled = !(appState.isLiffReady && allValid);
 }
 
 function cacheElements() {
@@ -87,9 +101,9 @@ function bindEvents() {
     showScreen('welcomeScreen');
   });
   elements.driverForm.addEventListener('submit', handleFormSubmit);
-  elements.title.addEventListener('change', function () { validateTitle(false); });
-  elements.firstName.addEventListener('input', function () { validateFirstName(false); });
-  elements.lastName.addEventListener('input', function () { validateLastName(false); });
+  elements.title.addEventListener('change', function () { validateTitle(false); updateSubmitButtonState(); });
+  elements.firstName.addEventListener('input', function () { validateFirstName(false); updateSubmitButtonState(); });
+  elements.lastName.addEventListener('input', function () { validateLastName(false); updateSubmitButtonState(); });
   elements.phoneNumber.addEventListener('input', handlePhoneInput);
   elements.resultActionButton.addEventListener('click', returnToLineChat);
 }
@@ -204,6 +218,7 @@ function getCampaignSource() {
 function handlePhoneInput() {
   elements.phoneNumber.value = elements.phoneNumber.value.replace(/\D/g, '').slice(0, 10);
   validatePhoneNumber(false);
+  updateSubmitButtonState();
 }
 
 function validateForm() {
@@ -342,14 +357,14 @@ function handleSubmissionSuccess(response) {
   }
   renderResult(response.matchStatus);
   showScreen('resultScreen');
-  elements.submitButton.disabled = false;
+  updateSubmitButtonState();
 }
 
 function handleSubmissionFailure(error) {
   console.error('Submission error:', error);
   renderErrorResult();
   showScreen('resultScreen');
-  elements.submitButton.disabled = false;
+  updateSubmitButtonState();
 }
 
 function renderResult(matchStatus) {
