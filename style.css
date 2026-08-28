@@ -1,11 +1,13 @@
 :root {
-  --green: #27bd21;
-  --green-dark: #159b18;
-  --green-soft: #eefaea;
+  /* Matched to the Deliveree Driver App palette */
+  --green: #3faf2a;
+  --green-dark: #2f8f1f;
+  --green-soft: #eaf6e7;
   --ink: #151515;
   --muted: #62686f;
   --line: #d8dde2;
-  --field: #eef3ff;
+  --field: #ffffff;
+  --band: #f1f1f1;
   --danger: #c62828;
   --danger-soft: #fff1f1;
   --white: #ffffff;
@@ -19,7 +21,7 @@ html,
 body {
   margin: 0;
   min-height: 100%;
-  background: #f2f4f5;
+  background: var(--white);
   color: var(--ink);
   font-family: Arial, "Noto Sans Thai", Tahoma, sans-serif;
 }
@@ -171,7 +173,10 @@ h1 {
   grid-template-columns: 52px minmax(0, 1fr) 64px;
   align-items: center;
   gap: 14px;
-  margin-bottom: 34px;
+  margin: -36px -38px 30px;
+  padding: 18px 38px;
+  background: var(--band);
+  border-bottom: 1px solid #e4e4e4;
 }
 
 .back-button {
@@ -338,9 +343,32 @@ input:disabled {
   line-height: 1;
 }
 
-.result-icon.error {
+/* Status tones — each match status gets a distinct colour so results
+   are distinguishable at a glance, not just by reading the text. */
+.result-icon.tone-success {
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--green-soft);
+}
+
+.result-icon.tone-info {
+  border-color: #1565c0;
+  color: #1565c0;
+  background: #e8f1fb;
+  font-weight: 700;
+}
+
+.result-icon.tone-warning {
+  border-color: #e08600;
+  color: #e08600;
+  background: #fff6e5;
+  font-weight: 700;
+}
+
+.result-icon.tone-danger {
   border-color: var(--danger);
   color: var(--danger);
+  background: var(--danger-soft);
   font-size: 54px;
   font-weight: 700;
 }
@@ -373,6 +401,7 @@ input:disabled {
 @media (min-width: 680px) {
   body {
     padding: 18px 0;
+    background: #f2f4f5;
   }
 
   .app-shell {
@@ -395,6 +424,8 @@ input:disabled {
   .screen-header {
     grid-template-columns: 50px minmax(0, 1fr) 58px;
     gap: 10px;
+    margin: -28px -24px 26px;
+    padding: 16px 24px;
   }
 
   .screen-title h2 {
