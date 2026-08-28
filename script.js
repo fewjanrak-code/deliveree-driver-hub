@@ -8,7 +8,7 @@ const LINE_OA_CHAT_URL =
 // (doPost). Update this if you redeploy and get a new URL. It does NOT need
 // to be the same URL this page is hosted on anymore.
 const API_ENDPOINT =
-  'https://script.google.com/a/macros/deliveree.com/s/AKfycbypNB3lJjj8-FWdsD1IHMeBqHVU_qaPxzquLFJF_fwPa7-W_I-a37uyB7UbBjwoeKCP/exec';
+  'https://script.google.com/macros/s/AKfycbypNB3Ijjj8-FWdsD1IHMeBqHVU_qaPxzquLFJF_fwPa7-W_I-a37uyB7UbBjwoeKCP/exec';
 
 const appState = {
   lineUserId: '', lineDisplayName: '', linePictureUrl: '', language: '',
