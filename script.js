@@ -1,214 +1,448 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, maximum-scale=1"
-  >
-  <title>Deliveree Driver Hub</title>
+:root {
+  /* Matched to the Deliveree Driver App palette */
+  --green: #3faf2a;
+  --green-dark: #2f8f1f;
+  --green-soft: #eaf6e7;
+  --ink: #151515;
+  --muted: #62686f;
+  --line: #d8dde2;
+  --field: #ffffff;
+  --band: #f1f1f1;
+  --danger: #c62828;
+  --danger-soft: #fff1f1;
+  --white: #ffffff;
+}
 
-  <!-- LINE LIFF SDK: must load before script.js uses window.liff. -->
-  <script
-    charset="utf-8"
-    src="https://static.line-scdn.net/liff/edge/2/sdk.js"
-  ></script>
+* {
+  box-sizing: border-box;
+}
 
-  <link rel="stylesheet" href="style.css?v=5">
-</head>
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--white);
+  color: var(--ink);
+  font-family: Arial, "Noto Sans Thai", Tahoma, sans-serif;
+}
 
-<body>
-  <main class="app-shell">
+body {
+  min-height: 100vh;
+}
 
-    <!-- SCREEN 1: WELCOME -->
-    <section id="welcomeScreen" class="screen welcome-screen active">
-      <div class="welcome-brand">
-        <img
-          src="https://drive.google.com/thumbnail?id=1RNZiwsId_kF_nO0E5mo-gDpNYPLcr69x&sz=w1000"
-          alt="Deliveree"
-          class="welcome-logo"
-        >
-      </div>
+button,
+input,
+select {
+  font: inherit;
+}
 
-      <div class="welcome-icon" aria-hidden="true">🚚</div>
+button {
+  -webkit-tap-highlight-color: transparent;
+}
 
-      <h1>ยินดีต้อนรับสู่ Deliveree Driver Hub</h1>
+.app-shell {
+  width: 100%;
+  max-width: 630px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: var(--white);
+}
 
-      <p class="thai-description">
-        กรุณากรอกข้อมูลเบื้องต้นเพื่อให้เราตรวจสอบ
-        <br>
-        และแนะนำขั้นตอนที่เหมาะสมสำหรับคุณ
-      </p>
+.screen {
+  display: none;
+  min-height: 100vh;
+  padding: 36px 38px 42px;
+}
 
-      <div class="language-divider"></div>
+.screen.active {
+  display: block;
+}
 
-      <p class="english-description">
-        <strong>Welcome to Deliveree Driver Hub</strong>
-        <span>
-          Please provide your basic information so we can check your status
-          and guide you to the right next step.
-        </span>
-      </p>
+.welcome-screen,
+.processing-screen,
+.result-screen {
+  text-align: center;
+}
 
-      <div id="startupMessage" class="form-message" role="alert"></div>
+.welcome-screen.active,
+.processing-screen.active,
+.result-screen.active {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-      <button
-        id="getStartedButton"
-        type="button"
-        class="primary-button welcome-button"
-        disabled
-      >
-        กำลังเชื่อมต่อ LINE... (Connecting to LINE...)
-      </button>
-    </section>
+.welcome-brand {
+  width: 100%;
+  margin: 16px 0 28px;
+}
 
-    <!-- SCREEN 2: FORM -->
-    <section id="formScreen" class="screen">
-      <header class="screen-header">
-        <button
-          id="backToWelcomeButton"
-          type="button"
-          class="back-button"
-          aria-label="กลับ (Back)"
-        >
-          ‹
-        </button>
+.welcome-logo,
+.process-result-logo {
+  display: block;
+  width: 245px;
+  max-width: 78%;
+  height: auto;
+  margin: 0 auto;
+}
 
-        <div class="screen-title">
-          <h2>ข้อมูลเบื้องต้น</h2>
-          <p>Basic Information</p>
-        </div>
+.welcome-icon {
+  width: 84px;
+  height: 84px;
+  margin: 8px auto 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green-soft);
+  font-size: 40px;
+}
 
-        <img
-          src="https://drive.google.com/thumbnail?id=124bs_N_coKZhZVjathbBu2eqtH1udf9p&sz=w500"
-          alt="Deliveree Driver"
-          class="header-logo"
-        >
-      </header>
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
 
-      <form id="driverForm" novalidate>
-        <div class="field-group">
-          <label for="title">
-            คำนำหน้าชื่อ <span>(Title)</span>
-          </label>
-          <select id="title" name="title" required>
-            <option value="" selected disabled hidden>
-              กรุณาเลือกคำนำหน้าชื่อ (Select Title)
-            </option>
-            <option value="นาย">นาย</option>
-            <option value="นาง">นาง</option>
-            <option value="นางสาว">นางสาว</option>
-          </select>
-          <p id="titleError" class="field-error"></p>
-        </div>
+h1 {
+  margin-bottom: 18px;
+  font-size: 25px;
+  line-height: 1.35;
+}
 
-        <div class="field-group">
-          <label for="firstName">
-            ชื่อ <span>(First Name)</span>
-          </label>
-          <input
-            id="firstName"
-            name="firstName"
-            type="text"
-            autocomplete="given-name"
-            maxlength="100"
-            placeholder="กรุณากรอกชื่อ (Please enter your first name)"
-            required
-          >
-          <p id="firstNameError" class="field-error"></p>
-        </div>
+.thai-description,
+.english-description {
+  margin-bottom: 22px;
+  color: #30343a;
+  font-size: 16px;
+  line-height: 1.65;
+}
 
-        <div class="field-group">
-          <label for="lastName">
-            นามสกุล <span>(Last Name)</span>
-          </label>
-          <input
-            id="lastName"
-            name="lastName"
-            type="text"
-            autocomplete="family-name"
-            maxlength="100"
-            placeholder="กรุณากรอกนามสกุล (Please enter your last name)"
-            required
-          >
-          <p id="lastNameError" class="field-error"></p>
-        </div>
+.english-description strong,
+.english-description span {
+  display: block;
+}
 
-        <div class="field-group">
-          <label for="phoneNumber">
-            เบอร์โทรศัพท์ที่ใช้ลงทะเบียนกับ Deliveree <span>(Phone Number)</span>
-          </label>
-          <input
-            id="phoneNumber"
-            name="phoneNumber"
-            type="tel"
-            inputmode="numeric"
-            autocomplete="tel"
-            minlength="10"
-            maxlength="10"
-            pattern="0[0-9]{9}"
-            placeholder="ตัวอย่าง: 0812345678 (Example: 0812345678)"
-            required
-          >
-          <p class="field-helper">
-            กรุณากรอกตัวเลข 10 หลัก โดยขึ้นต้นด้วย 0
-            <br>
-            Please enter 10 digits beginning with 0.
-          </p>
-          <p id="phoneNumberError" class="field-error"></p>
-        </div>
+.english-description strong {
+  margin-bottom: 8px;
+}
 
-        <div id="formMessage" class="form-message" role="alert"></div>
+.language-divider {
+  width: 58px;
+  height: 3px;
+  margin: 0 auto 22px;
+  border-radius: 999px;
+  background: var(--green);
+}
 
-        <button
-          id="submitButton"
-          type="submit"
-          class="primary-button"
-          disabled
-        >
-          ตรวจสอบข้อมูล (Check Information)
-        </button>
-      </form>
-    </section>
+.primary-button {
+  width: 100%;
+  min-height: 62px;
+  padding: 15px 20px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--green);
+  color: var(--white);
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
+  transition: background 0.18s ease, opacity 0.18s ease,
+    transform 0.08s ease;
+}
 
-    <!-- SCREEN 3: PROCESSING -->
-    <section id="processingScreen" class="screen processing-screen">
-      <img
-        src="https://drive.google.com/thumbnail?id=1RNZiwsId_kF_nO0E5mo-gDpNYPLcr69x&sz=w1000"
-        alt="Deliveree"
-        class="process-result-logo processing-logo"
-      >
-      <div class="spinner" aria-hidden="true"></div>
-      <h2>
-        กำลังตรวจสอบข้อมูลของคุณ
-        <span>Checking your information</span>
-      </h2>
-      <p>
-        กรุณารอสักครู่
-        <span>Please wait a moment</span>
-      </p>
-    </section>
+.primary-button:hover:not(:disabled) {
+  background: var(--green-dark);
+}
 
-    <!-- SCREEN 4: RESULT -->
-    <section id="resultScreen" class="screen result-screen">
-      <img
-        src="https://drive.google.com/thumbnail?id=1RNZiwsId_kF_nO0E5mo-gDpNYPLcr69x&sz=w1000"
-        alt="Deliveree"
-        class="process-result-logo result-logo"
-      >
-      <div id="resultIcon" class="result-icon" aria-hidden="true">✓</div>
-      <div id="resultContent"></div>
-      <button
-        id="resultActionButton"
-        type="button"
-        class="primary-button"
-      >
-        กลับไปที่แชท LINE (Return to LINE Chat)
-      </button>
-    </section>
+.primary-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
 
-  </main>
+.primary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
 
-  <script src="script.js?v=6"></script>
-</body>
-</html>
+.welcome-button {
+  margin-top: auto;
+}
+
+.screen-header {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 64px;
+  align-items: center;
+  gap: 14px;
+  margin: -36px -38px 30px;
+  padding: 18px 38px;
+  background: var(--band);
+  border-bottom: 1px solid #e4e4e4;
+}
+
+.back-button {
+  width: 48px;
+  height: 48px;
+  padding: 0 0 5px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--green-dark);
+  cursor: pointer;
+  font-size: 38px;
+  line-height: 1;
+}
+
+.screen-title h2 {
+  margin-bottom: 2px;
+  font-size: 24px;
+  line-height: 1.35;
+}
+
+.screen-title p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.header-logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  justify-self: end;
+}
+
+.field-group {
+  margin-bottom: 28px;
+}
+
+label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+label span {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+input,
+select {
+  width: 100%;
+  min-height: 61px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--white);
+  color: var(--ink);
+  outline: 0;
+  font-size: 17px;
+}
+
+input {
+  background: var(--field);
+}
+
+input:focus,
+select:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(39, 189, 33, 0.13);
+}
+
+select:disabled,
+input:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.field-helper {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.field-error {
+  min-height: 20px;
+  margin: 6px 0 0;
+  color: var(--danger);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.form-message {
+  width: 100%;
+  margin: 0 0 16px;
+  color: var(--danger);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.processing-screen,
+.result-screen {
+  justify-content: flex-start;
+  padding-top: 52px;
+}
+
+.processing-logo,
+.result-logo {
+  margin-bottom: 42px;
+}
+
+.spinner {
+  width: 72px;
+  height: 72px;
+  margin: 2px auto 34px;
+  border: 7px solid #e6e9ec;
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.85s linear infinite;
+}
+
+.processing-screen h2,
+.result-screen h2 {
+  margin-bottom: 14px;
+  font-size: 23px;
+  line-height: 1.45;
+}
+
+.processing-screen h2 span {
+  display: block;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 18px;
+}
+
+.processing-screen p,
+.result-screen p {
+  color: #34383d;
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.processing-screen p span {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+}
+
+.result-icon {
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 38px;
+  display: grid;
+  place-items: center;
+  border: 4px solid var(--green);
+  border-radius: 50%;
+  color: var(--green);
+  font-size: 58px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+/* Status tones — each match status gets a distinct colour so results
+   are distinguishable at a glance, not just by reading the text. */
+.result-icon.tone-success {
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--green-soft);
+}
+
+.result-icon.tone-info {
+  border-color: #1565c0;
+  color: #1565c0;
+  background: #e8f1fb;
+  font-weight: 700;
+}
+
+.result-icon.tone-warning {
+  border-color: #e08600;
+  color: #e08600;
+  background: #fff6e5;
+  font-weight: 700;
+}
+
+.result-icon.tone-danger {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: var(--danger-soft);
+  font-size: 54px;
+  font-weight: 700;
+}
+
+#resultContent {
+  width: 100%;
+}
+
+#resultContent h3 {
+  margin-bottom: 26px;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.45;
+}
+
+#resultContent p {
+  margin-bottom: 16px;
+}
+
+.result-screen .primary-button {
+  margin-top: 22px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (min-width: 680px) {
+  body {
+    padding: 18px 0;
+    background: #f2f4f5;
+  }
+
+  .app-shell {
+    min-height: calc(100vh - 36px);
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+  }
+
+  .screen {
+    min-height: calc(100vh - 36px);
+  }
+}
+
+@media (max-width: 480px) {
+  .screen {
+    padding: 28px 24px 34px;
+  }
+
+  .screen-header {
+    grid-template-columns: 50px minmax(0, 1fr) 58px;
+    gap: 10px;
+    margin: -28px -24px 26px;
+    padding: 16px 24px;
+  }
+
+  .screen-title h2 {
+    font-size: 21px;
+  }
+
+  .header-logo {
+    width: 58px;
+    height: 58px;
+  }
+
+  h1 {
+    font-size: 22px;
+  }
+
+  .welcome-logo,
+  .process-result-logo {
+    width: 220px;
+  }
+}
