@@ -1,531 +1,214 @@
-'use strict';
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1"
+  >
+  <title>Deliveree Driver Hub</title>
 
-const LIFF_ID = '2011290422-74faHbOe';
-const LINE_OA_CHAT_URL =
-  'https://line.me/R/oaMessage/%40442pdsyg/?REGISTER';
+  <!-- LINE LIFF SDK: must load before script.js uses window.liff. -->
+  <script
+    charset="utf-8"
+    src="https://static.line-scdn.net/liff/edge/2/sdk.js"
+  ></script>
 
-// This is your Apps Script Web App's /exec URL, used ONLY as a JSON API now
-// (doPost). Update this if you redeploy and get a new URL. It does NOT need
-// to be the same URL this page is hosted on anymore.
-const API_ENDPOINT =
-  'https://script.google.com/macros/s/AKfycbypNB3Ijjj8-FWdsD1IHMeBqHVU_qaPxzquLFJF_fwPa7-W_I-a37uyB7UbBjwoeKCP/exec';
+  <link rel="stylesheet" href="style.css?v=5">
+</head>
 
-const appState = {
-  lineUserId: '', lineDisplayName: '', linePictureUrl: '', language: '',
-  campaignSource: 'Unknown', accessChannel: 'Web', liffAccessToken: '',
-  isLiffReady: false, pendingRecordId: ''
-};
-let elements = {};
+<body>
+  <main class="app-shell">
 
-document.addEventListener('DOMContentLoaded', initializeApp);
+    <!-- SCREEN 1: WELCOME -->
+    <section id="welcomeScreen" class="screen welcome-screen active">
+      <div class="welcome-brand">
+        <img
+          src="https://drive.google.com/thumbnail?id=1RNZiwsId_kF_nO0E5mo-gDpNYPLcr69x&sz=w1000"
+          alt="Deliveree"
+          class="welcome-logo"
+        >
+      </div>
 
-/**
- * Builds a Record ID matching Code.gs's expected format
- * (DJH-yyyyMMdd-HHmmss-XXXXXX) up front, before the first submit attempt.
- * Reusing the same ID on every retry lets the server's existing
- * find-by-recordId logic return the already-saved result instead of
- * creating a duplicate row if a slow request gets retried.
- */
-function generateClientRecordId() {
-  const now = new Date();
-  const pad = function (n, len) { return String(n).padStart(len || 2, '0'); };
-  const datePart = '' + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate());
-  const timePart = pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
-  const hex = Array.from({ length: 6 }, function () {
-    return '0123456789ABCDEF'[Math.floor(Math.random() * 16)];
-  }).join('');
-  return 'DJH-' + datePart + '-' + timePart + '-' + hex;
-}
+      <div class="welcome-icon" aria-hidden="true">🚚</div>
 
-async function initializeApp() {
-  cacheElements();
-  bindEvents();
-  appState.campaignSource = getCampaignSource();
-  if (!await initializeLiffIdentity()) {
-    if (!cleanText(elements.startupMessage.textContent)) {
-      showStartupError(
-        'ไม่สามารถเชื่อมต่อบัญชี LINE ได้ กรุณาเปิดผ่านลิงก์ LIFF และลองใหม่ ' +
-        '(Unable to connect your LINE account. Please open the LIFF URL and try again.)'
-      );
-    }
-    return;
-  }
-  elements.getStartedButton.disabled = false;
-  elements.getStartedButton.textContent = 'เริ่มต้นใช้งาน (Get Started)';
-  elements.startupMessage.textContent = '';
-  updateSubmitButtonState();
-}
+      <h1>ยินดีต้อนรับสู่ Deliveree Driver Hub</h1>
 
-/**
- * Re-checks every field WITHOUT showing error messages (silent mode) and
- * enables the submit button only when all four are valid. Called on every
- * keystroke/selection so the button reflects live form completeness rather
- * than only being checked at click time.
- */
-function updateSubmitButtonState() {
-  const allValid = validateTitle(false) &&
-    validateFirstName(false) &&
-    validateLastName(false) &&
-    validatePhoneNumber(false);
-  elements.submitButton.disabled = !(appState.isLiffReady && allValid);
-}
+      <p class="thai-description">
+        กรุณากรอกข้อมูลเบื้องต้นเพื่อให้เราตรวจสอบ
+        <br>
+        และแนะนำขั้นตอนที่เหมาะสมสำหรับคุณ
+      </p>
 
-function cacheElements() {
-  elements = {
-    startupMessage: document.getElementById('startupMessage'),
-    getStartedButton: document.getElementById('getStartedButton'),
-    backToWelcomeButton: document.getElementById('backToWelcomeButton'),
-    driverForm: document.getElementById('driverForm'),
-    title: document.getElementById('title'),
-    firstName: document.getElementById('firstName'),
-    lastName: document.getElementById('lastName'),
-    phoneNumber: document.getElementById('phoneNumber'),
-    titleError: document.getElementById('titleError'),
-    firstNameError: document.getElementById('firstNameError'),
-    lastNameError: document.getElementById('lastNameError'),
-    phoneNumberError: document.getElementById('phoneNumberError'),
-    formMessage: document.getElementById('formMessage'),
-    submitButton: document.getElementById('submitButton'),
-    resultIcon: document.getElementById('resultIcon'),
-    resultContent: document.getElementById('resultContent'),
-    resultActionButton: document.getElementById('resultActionButton')
-  };
-}
+      <div class="language-divider"></div>
 
-function bindEvents() {
-  elements.getStartedButton.addEventListener('click', function () {
-    showScreen('formScreen');
-    elements.title.focus();
-  });
-  elements.backToWelcomeButton.addEventListener('click', function () {
-    showScreen('welcomeScreen');
-  });
-  elements.driverForm.addEventListener('submit', handleFormSubmit);
-  elements.title.addEventListener('change', function () { validateTitle(false); updateSubmitButtonState(); });
-  elements.firstName.addEventListener('input', function () { validateFirstName(false); updateSubmitButtonState(); });
-  elements.lastName.addEventListener('input', function () { validateLastName(false); updateSubmitButtonState(); });
-  elements.phoneNumber.addEventListener('input', handlePhoneInput);
-  elements.resultActionButton.addEventListener('click', returnToLineChat);
-}
+      <p class="english-description">
+        <strong>Welcome to Deliveree Driver Hub</strong>
+        <span>
+          Please provide your basic information so we can check your status
+          and guide you to the right next step.
+        </span>
+      </p>
 
-async function initializeLiffIdentity() {
-  setConnectionStatus('กำลังโหลด LINE SDK... (Loading LINE SDK...)');
-  if (!window.liff) {
-    showStartupError(getLiffErrorMessage(new Error('LIFF_SDK_NOT_LOADED')));
-    return false;
-  }
-  try {
-    setConnectionStatus('กำลังเริ่มต้น LIFF... (Initializing LIFF...)');
-    await withTimeout(
-      liff.init({ liffId: LIFF_ID }),
-      15000,
-      'LIFF_INIT_TIMEOUT'
-    );
-    if (!liff.isLoggedIn()) {
-      setConnectionStatus('กำลังเข้าสู่ระบบ LINE... (Signing in to LINE...)');
-      if (!liff.isInClient()) {
-        liff.login();
-        return false;
-      }
-      throw new Error('LIFF_CLIENT_NOT_LOGGED_IN');
-    }
-    setConnectionStatus('กำลังโหลดโปรไฟล์ LINE... (Loading LINE profile...)');
-    const profile = await withTimeout(
-      liff.getProfile(),
-      10000,
-      'LIFF_PROFILE_TIMEOUT'
-    );
-    appState.lineUserId = cleanText(profile.userId);
-    appState.lineDisplayName = cleanText(profile.displayName);
-    appState.linePictureUrl = cleanText(profile.pictureUrl);
-    appState.language = getLiffLanguage();
-    appState.accessChannel = liff.isInClient() ? 'LIFF' : 'LIFF External Browser';
-    appState.liffAccessToken = liff.getAccessToken() || '';
-    appState.isLiffReady = Boolean(appState.lineUserId && appState.liffAccessToken);
-    return appState.isLiffReady;
-  } catch (error) {
-    console.error('LIFF initialization error:', error);
-    showStartupError(getLiffErrorMessage(error));
-    return false;
-  }
-}
+      <div id="startupMessage" class="form-message" role="alert"></div>
 
-function withTimeout(promise, timeoutMs, errorCode) {
-  return Promise.race([
-    promise,
-    new Promise(function (_, reject) {
-      window.setTimeout(function () {
-        reject(new Error(errorCode));
-      }, timeoutMs);
-    })
-  ]);
-}
+      <button
+        id="getStartedButton"
+        type="button"
+        class="primary-button welcome-button"
+        disabled
+      >
+        กำลังเชื่อมต่อ LINE... (Connecting to LINE...)
+      </button>
+    </section>
 
-function setConnectionStatus(message) {
-  elements.getStartedButton.textContent = message;
-}
+    <!-- SCREEN 2: FORM -->
+    <section id="formScreen" class="screen">
+      <header class="screen-header">
+        <button
+          id="backToWelcomeButton"
+          type="button"
+          class="back-button"
+          aria-label="กลับ (Back)"
+        >
+          ‹
+        </button>
 
-function getLiffErrorMessage(error) {
-  const code = cleanText(error && (error.code || error.message));
-  if (code.indexOf('LIFF_INIT_TIMEOUT') !== -1) {
-    return 'การเชื่อมต่อ LIFF ใช้เวลานานเกินไป กรุณาปิดหน้านี้และเปิดลิงก์ LIFF ใหม่ ' +
-      '(LIFF initialization timed out. Please close this page and reopen the LIFF URL.)';
-  }
-  if (code.indexOf('LIFF_PROFILE_TIMEOUT') !== -1) {
-    return 'ไม่สามารถโหลดโปรไฟล์ LINE ได้ กรุณาปิดหน้านี้และลองใหม่ ' +
-      '(LINE profile loading timed out. Please close this page and try again.)';
-  }
-  if (code.indexOf('LIFF_SDK_NOT_LOADED') !== -1) {
-    return 'ไม่สามารถโหลด LINE SDK ได้ กรุณาตรวจสอบอินเทอร์เน็ตและลองใหม่ ' +
-      '(The LINE SDK could not load. Please check your connection and try again.)';
-  }
-  if (code.indexOf('LIFF_CLIENT_NOT_LOGGED_IN') !== -1) {
-    return 'LIFF เปิดใน LINE แต่ไม่พบสถานะการเข้าสู่ระบบ กรุณาปิดหน้าและเปิดลิงก์ LIFF ใหม่ ' +
-      '(LIFF opened in LINE without a login session. Please close it and reopen the LIFF URL.)';
-  }
-  return 'ไม่สามารถเชื่อมต่อ LINE ได้: ' + (code || 'Unknown error');
-}
+        <div class="screen-title">
+          <h2>ข้อมูลเบื้องต้น</h2>
+          <p>Basic Information</p>
+        </div>
 
-function getLiffLanguage() {
-  try {
-    if (typeof liff.getAppLanguage === 'function') return cleanText(liff.getAppLanguage());
-  } catch (error) {
-    console.warn('Unable to read LIFF app language:', error);
-  }
-  return cleanText(navigator.language);
-}
+        <img
+          src="https://drive.google.com/thumbnail?id=124bs_N_coKZhZVjathbBu2eqtH1udf9p&sz=w500"
+          alt="Deliveree Driver"
+          class="header-logo"
+        >
+      </header>
 
-function getCampaignSource() {
-  const params = new URLSearchParams(window.location.search);
-  const direct = params.get('campaign') || params.get('source') || params.get('utm_source');
-  if (direct) return cleanText(direct).substring(0, 100) || 'Unknown';
-  const liffState = params.get('liff.state');
-  if (liffState) {
-    try {
-      const stateUrl = new URL(decodeURIComponent(liffState), window.location.origin);
-      return cleanText(
-        stateUrl.searchParams.get('campaign') ||
-        stateUrl.searchParams.get('source') ||
-        stateUrl.searchParams.get('utm_source')
-      ).substring(0, 100) || 'Unknown';
-    } catch (error) {
-      console.warn('Unable to parse liff.state:', error);
-    }
-  }
-  return 'Unknown';
-}
+      <form id="driverForm" novalidate>
+        <div class="field-group">
+          <label for="title">
+            คำนำหน้าชื่อ <span>(Title)</span>
+          </label>
+          <select id="title" name="title" required>
+            <option value="" selected disabled hidden>
+              กรุณาเลือกคำนำหน้าชื่อ (Select Title)
+            </option>
+            <option value="นาย">นาย</option>
+            <option value="นาง">นาง</option>
+            <option value="นางสาว">นางสาว</option>
+          </select>
+          <p id="titleError" class="field-error"></p>
+        </div>
 
-function handlePhoneInput() {
-  elements.phoneNumber.value = elements.phoneNumber.value.replace(/\D/g, '').slice(0, 10);
-  validatePhoneNumber(false);
-  updateSubmitButtonState();
-}
+        <div class="field-group">
+          <label for="firstName">
+            ชื่อ <span>(First Name)</span>
+          </label>
+          <input
+            id="firstName"
+            name="firstName"
+            type="text"
+            autocomplete="given-name"
+            maxlength="100"
+            placeholder="กรุณากรอกชื่อ (Please enter your first name)"
+            required
+          >
+          <p id="firstNameError" class="field-error"></p>
+        </div>
 
-function validateForm() {
-  return [validateTitle(true), validateFirstName(true), validateLastName(true),
-    validatePhoneNumber(true)].every(Boolean);
-}
+        <div class="field-group">
+          <label for="lastName">
+            นามสกุล <span>(Last Name)</span>
+          </label>
+          <input
+            id="lastName"
+            name="lastName"
+            type="text"
+            autocomplete="family-name"
+            maxlength="100"
+            placeholder="กรุณากรอกนามสกุล (Please enter your last name)"
+            required
+          >
+          <p id="lastNameError" class="field-error"></p>
+        </div>
 
-function validateTitle(showRequired) {
-  if (['นาย', 'นาง', 'นางสาว'].indexOf(elements.title.value) === -1) {
-    setFieldError(elements.titleError, showRequired
-      ? 'กรุณาเลือกคำนำหน้าชื่อ (Please select your title.)' : '');
-    return false;
-  }
-  clearFieldError(elements.titleError);
-  return true;
-}
+        <div class="field-group">
+          <label for="phoneNumber">
+            เบอร์โทรศัพท์ที่ใช้ลงทะเบียนกับ Deliveree <span>(Phone Number)</span>
+          </label>
+          <input
+            id="phoneNumber"
+            name="phoneNumber"
+            type="tel"
+            inputmode="numeric"
+            autocomplete="tel"
+            minlength="10"
+            maxlength="10"
+            pattern="0[0-9]{9}"
+            placeholder="ตัวอย่าง: 0812345678 (Example: 0812345678)"
+            required
+          >
+          <p class="field-helper">
+            กรุณากรอกตัวเลข 10 หลัก โดยขึ้นต้นด้วย 0
+            <br>
+            Please enter 10 digits beginning with 0.
+          </p>
+          <p id="phoneNumberError" class="field-error"></p>
+        </div>
 
-function validateFirstName(showRequired) {
-  if (!cleanText(elements.firstName.value)) {
-    setFieldError(elements.firstNameError, showRequired
-      ? 'กรุณากรอกชื่อ (Please enter your first name.)' : '');
-    return false;
-  }
-  clearFieldError(elements.firstNameError);
-  return true;
-}
+        <div id="formMessage" class="form-message" role="alert"></div>
 
-function validateLastName(showRequired) {
-  if (!cleanText(elements.lastName.value)) {
-    setFieldError(elements.lastNameError, showRequired
-      ? 'กรุณากรอกนามสกุล (Please enter your last name.)' : '');
-    return false;
-  }
-  clearFieldError(elements.lastNameError);
-  return true;
-}
+        <button
+          id="submitButton"
+          type="submit"
+          class="primary-button"
+          disabled
+        >
+          ตรวจสอบข้อมูล (Check Information)
+        </button>
+      </form>
+    </section>
 
-function validatePhoneNumber(showRequired) {
-  const value = elements.phoneNumber.value;
-  if (!value) {
-    setFieldError(elements.phoneNumberError, showRequired
-      ? 'กรุณากรอกเบอร์โทรศัพท์ (Please enter your phone number.)' : '');
-    return false;
-  }
-  if (!/^0\d{9}$/.test(value)) {
-    setFieldError(elements.phoneNumberError,
-      'กรุณากรอกเบอร์โทรศัพท์ 10 หลัก โดยขึ้นต้นด้วย 0 ' +
-      '(Please enter 10 digits beginning with 0.)');
-    return false;
-  }
-  clearFieldError(elements.phoneNumberError);
-  return true;
-}
+    <!-- SCREEN 3: PROCESSING -->
+    <section id="processingScreen" class="screen processing-screen">
+      <img
+        src="https://drive.google.com/thumbnail?id=1RNZiwsId_kF_nO0E5mo-gDpNYPLcr69x&sz=w1000"
+        alt="Deliveree"
+        class="process-result-logo processing-logo"
+      >
+      <div class="spinner" aria-hidden="true"></div>
+      <h2>
+        กำลังตรวจสอบข้อมูลของคุณ
+        <span>Checking your information</span>
+      </h2>
+      <p>
+        กรุณารอสักครู่
+        <span>Please wait a moment</span>
+      </p>
+    </section>
 
-function handleFormSubmit(event) {
-  event.preventDefault();
-  hideFormMessage();
-  if (!appState.isLiffReady) {
-    showFormMessage('ไม่พบข้อมูลบัญชี LINE กรุณาเปิดแบบฟอร์มใหม่ผ่าน LIFF ' +
-      '(LINE identity is unavailable. Please reopen the form through LIFF.)');
-    return;
-  }
-  if (!validateForm()) {
-    showFormMessage('กรุณาตรวจสอบข้อมูลที่กรอก (Please check the highlighted information.)');
-    return;
-  }
+    <!-- SCREEN 4: RESULT -->
+    <section id="resultScreen" class="screen result-screen">
+      <img
+        src="https://drive.google.com/thumbnail?id=1RNZiwsId_kF_nO0E5mo-gDpNYPLcr69x&sz=w1000"
+        alt="Deliveree"
+        class="process-result-logo result-logo"
+      >
+      <div id="resultIcon" class="result-icon" aria-hidden="true">✓</div>
+      <div id="resultContent"></div>
+      <button
+        id="resultActionButton"
+        type="button"
+        class="primary-button"
+      >
+        กลับไปที่แชท LINE (Return to LINE Chat)
+      </button>
+    </section>
 
-  const phoneLocal = elements.phoneNumber.value;
-  if (!appState.pendingRecordId) {
-    appState.pendingRecordId = generateClientRecordId();
-  }
-  const payload = {
-    lineUserId: appState.lineUserId,
-    lineDisplayName: appState.lineDisplayName,
-    linePictureUrl: appState.linePictureUrl,
-    language: appState.language,
-    campaignSource: appState.campaignSource,
-    accessChannel: appState.accessChannel,
-    liffAccessToken: appState.liffAccessToken,
-    recordId: appState.pendingRecordId,
-    title: elements.title.value,
-    firstName: cleanText(elements.firstName.value),
-    lastName: cleanText(elements.lastName.value),
-    phoneNumber: phoneLocal,
-    phoneLocal: phoneLocal,
-    phoneInternational: toInternationalPhone(phoneLocal)
-  };
+  </main>
 
-  elements.submitButton.disabled = true;
-  showScreen('processingScreen');
-  submitDriverInformation(payload)
-    .then(handleSubmissionSuccess)
-    .catch(handleSubmissionFailure);
-}
-
-/**
- * Calls the Apps Script doPost endpoint directly. text/plain avoids a CORS
- * preflight request, which Apps Script Web Apps don't handle — this must
- * match how Code.gs's doPost() parses event.postData.contents as JSON.
- * Wrapped in a timeout so a stalled request fails visibly instead of
- * spinning on the processing screen forever.
- */
-function submitDriverInformation(payload) {
-  const controller = new AbortController();
-  const timeoutId = window.setTimeout(function () {
-    controller.abort();
-  }, 90000);
-
-  return fetch(API_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(payload),
-    signal: controller.signal
-  })
-    .then(function (response) {
-      window.clearTimeout(timeoutId);
-      if (!response.ok) {
-        throw new Error('Network response was not OK (' + response.status + ').');
-      }
-      return response.json();
-    })
-    .catch(function (error) {
-      window.clearTimeout(timeoutId);
-      if (error && error.name === 'AbortError') {
-        throw new Error('SUBMIT_TIMEOUT');
-      }
-      throw error;
-    });
-}
-
-function handleSubmissionSuccess(response) {
-  if (!response || !response.success) {
-    handleSubmissionFailure(new Error(response && response.message
-      ? response.message : 'Submission failed.'));
-    return;
-  }
-  renderResult(response.matchStatus);
-  showScreen('resultScreen');
-  updateSubmitButtonState();
-  sendSummaryToChat(response);
-}
-
-/**
- * Posts a short summary into the LINE chat AS THE DRIVER, so the CS team
- * working in Freshchat can search and identify them.
- *
- * IMPORTANT: this message is visible to the driver, so it deliberately
- * contains NO internal classification (no "Banned Driver", no status
- * values, no matching notes). CS looks the Record ID up in the
- * Submissions sheet for the full picture.
- *
- * Requires the `chat_message.write` scope on the LIFF app. Fails silently
- * if unavailable — a failed summary must never block the driver, who has
- * already been shown their result.
- */
-function sendSummaryToChat(response) {
-  try {
-    if (!liff.isInClient() || typeof liff.sendMessages !== 'function') {
-      return; // Opened in an external browser; no chat to post into.
-    }
-
-    const lines = [
-      'ข้อมูลของฉันถูกบันทึกแล้ว (My information has been submitted)',
-      'ชื่อ (Name): ' + cleanText(elements.title.value) + ' ' +
-        cleanText(elements.firstName.value) + ' ' + cleanText(elements.lastName.value),
-      'เบอร์โทรศัพท์ (Phone): ' + elements.phoneNumber.value,
-      'รหัสอ้างอิง (Ref): ' + (response.recordId || '-')
-    ];
-
-    liff.sendMessages([{ type: 'text', text: lines.join('\n') }])
-      .catch(function (error) {
-        console.warn('Unable to post summary to chat:', error);
-      });
-  } catch (error) {
-    console.warn('Unable to post summary to chat:', error);
-  }
-}
-
-function handleSubmissionFailure(error) {
-  console.error('Submission error:', error);
-  renderErrorResult();
-  showScreen('resultScreen');
-  updateSubmitButtonState();
-}
-
-function renderResult(matchStatus) {
-  const result = getResultCopy(matchStatus);
-  elements.resultIcon.textContent = result.icon;
-  elements.resultIcon.className = 'result-icon tone-' + result.tone;
-  elements.resultContent.innerHTML = '<h2>' + escapeHtml(result.thaiTitle) + '</h2>' +
-    '<h3>' + escapeHtml(result.englishTitle) + '</h3>' +
-    '<p>' + escapeHtml(result.thaiMessage) + '</p>' +
-    '<p>' + escapeHtml(result.englishMessage) + '</p>';
-  resetResultButton();
-}
-
-/**
- * Each status maps to its own icon + tone so drivers can tell results apart
- * at a glance. Tones map to CSS classes in style.css:
- *   success (green)  - matched, nothing wrong
- *   info    (blue)   - no record found; not an error, just a new applicant
- *   warning (amber)  - needs a human to look at it
- *   danger  (red)    - blocked / cannot proceed
- */
-function getResultCopy(matchStatus) {
-  const results = {
-    'No Match': {
-      icon: 'i', tone: 'info',
-      thaiTitle: 'ไม่พบประวัติการสมัครของคุณ',
-      englishTitle: 'No previous application record was found',
-      thaiMessage: 'กรุณากลับไปที่แชท LINE เพื่อดำเนินการสมัครใหม่',
-      englishMessage: 'Please return to the LINE chat to continue with a new application.'
-    },
-    'Existing Applicant': {
-      icon: '✓', tone: 'success',
-      thaiTitle: 'พบข้อมูลการสมัครของคุณแล้ว',
-      englishTitle: 'Your application record was found',
-      thaiMessage: 'กรุณากลับไปที่แชท LINE เพื่อดำเนินการต่อ',
-      englishMessage: 'Please return to the LINE chat to continue your application.'
-    },
-    'Approved Driver': {
-      icon: '✓', tone: 'success',
-      thaiTitle: 'พบข้อมูลผู้ขับของคุณแล้ว',
-      englishTitle: 'Your approved driver record was found',
-      thaiMessage: 'กรุณากลับไปที่แชท LINE เพื่อดำเนินการต่อ',
-      englishMessage: 'Please return to the LINE chat to continue.'
-    },
-    'Returning Driver': {
-      icon: '↻', tone: 'success',
-      thaiTitle: 'พบข้อมูลผู้ขับเดิมของคุณแล้ว',
-      englishTitle: 'Your previous driver record was found',
-      thaiMessage: 'กรุณากลับไปที่แชท LINE เพื่อดำเนินการกลับมารับงานอีกครั้ง',
-      englishMessage: 'Please return to the LINE chat to continue the return-to-drive process.'
-    },
-    'Banned Driver': {
-      icon: '✕', tone: 'danger',
-      thaiTitle: 'บัญชีของคุณถูกระงับการใช้งาน',
-      englishTitle: 'Your account is suspended',
-      thaiMessage: 'กรุณาติดต่อเจ้าหน้าที่ผ่านแชท LINE',
-      englishMessage: 'Please contact the staff via LINE.'
-    },
-    'Duplicate Drivers': {
-      icon: '⧉', tone: 'warning',
-      thaiTitle: 'พบข้อมูลซ้ำในระบบ',
-      englishTitle: 'Duplicate records were found',
-      thaiMessage: 'กรุณากลับไปที่แชท LINE เพื่อให้เจ้าหน้าที่ตรวจสอบข้อมูลซ้ำ',
-      englishMessage: 'Please return to the LINE chat so our team can review the duplicate records.'
-    },
-    'Manual Review Required': {
-      icon: '!', tone: 'warning',
-      thaiTitle: 'จำเป็นต้องตรวจสอบข้อมูลเพิ่มเติม',
-      englishTitle: 'Additional review is required',
-      thaiMessage: 'กรุณากลับไปที่แชท LINE เพื่อให้เจ้าหน้าที่ช่วยตรวจสอบ',
-      englishMessage: 'Please return to the LINE chat for manual assistance.'
-    }
-  };
-  return results[matchStatus] || results['Manual Review Required'];
-}
-
-function renderErrorResult() {
-  elements.resultIcon.textContent = '✕';
-  elements.resultIcon.className = 'result-icon tone-danger';
-  elements.resultContent.innerHTML = '<h2>ไม่สามารถส่งข้อมูลได้</h2>' +
-    '<h3>Unable to submit information</h3>' +
-    '<p>เกิดข้อผิดพลาดขณะส่งข้อมูล กรุณากลับไปที่แชท LINE เพื่อลองอีกครั้ง</p>' +
-    '<p>An error occurred while submitting your information. Please return to the LINE chat and try again.</p>';
-  resetResultButton();
-}
-
-function resetResultButton() {
-  elements.resultActionButton.disabled = false;
-  elements.resultActionButton.textContent = 'กลับไปที่แชท LINE (Return to LINE Chat)';
-}
-
-function returnToLineChat() {
-  elements.resultActionButton.disabled = true;
-  elements.resultActionButton.textContent = 'กำลังกลับไปที่ LINE... (Returning to LINE...)';
-  window.location.assign(LINE_OA_CHAT_URL);
-}
-
-function toInternationalPhone(localPhone) {
-  return /^0\d{9}$/.test(localPhone) ? '66' + localPhone.substring(1) : '';
-}
-
-function showScreen(screenId) {
-  document.querySelectorAll('.screen').forEach(function (screen) {
-    screen.classList.remove('active');
-  });
-  const target = document.getElementById(screenId);
-  if (target) target.classList.add('active');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function showStartupError(message) {
-  elements.startupMessage.textContent = message;
-  elements.getStartedButton.disabled = true;
-  elements.getStartedButton.textContent = 'ไม่สามารถเชื่อมต่อได้ (Unable to connect)';
-}
-function showFormMessage(message) { elements.formMessage.textContent = message; }
-function hideFormMessage() { elements.formMessage.textContent = ''; }
-function setFieldError(element, message) { element.textContent = message || ''; }
-function clearFieldError(element) { element.textContent = ''; }
-function cleanText(value) {
-  return String(value == null ? '' : value).replace(/\s+/g, ' ').trim();
-}
-function escapeHtml(value) {
-  return String(value == null ? '' : value).replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
+  <script src="script.js?v=6"></script>
+</body>
+</html>
