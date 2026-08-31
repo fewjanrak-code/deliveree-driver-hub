@@ -358,6 +358,43 @@ function handleSubmissionSuccess(response) {
   renderResult(response.matchStatus);
   showScreen('resultScreen');
   updateSubmitButtonState();
+  sendSummaryToChat(response);
+}
+
+/**
+ * Posts a short summary into the LINE chat AS THE DRIVER, so the CS team
+ * working in Freshchat can search and identify them.
+ *
+ * IMPORTANT: this message is visible to the driver, so it deliberately
+ * contains NO internal classification (no "Banned Driver", no status
+ * values, no matching notes). CS looks the Record ID up in the
+ * Submissions sheet for the full picture.
+ *
+ * Requires the `chat_message.write` scope on the LIFF app. Fails silently
+ * if unavailable — a failed summary must never block the driver, who has
+ * already been shown their result.
+ */
+function sendSummaryToChat(response) {
+  try {
+    if (!liff.isInClient() || typeof liff.sendMessages !== 'function') {
+      return; // Opened in an external browser; no chat to post into.
+    }
+
+    const lines = [
+      'ข้อมูลของฉันถูกบันทึกแล้ว (My information has been submitted)',
+      'ชื่อ (Name): ' + cleanText(elements.title.value) + ' ' +
+        cleanText(elements.firstName.value) + ' ' + cleanText(elements.lastName.value),
+      'เบอร์โทรศัพท์ (Phone): ' + elements.phoneNumber.value,
+      'รหัสอ้างอิง (Ref): ' + (response.recordId || '-')
+    ];
+
+    liff.sendMessages([{ type: 'text', text: lines.join('\n') }])
+      .catch(function (error) {
+        console.warn('Unable to post summary to chat:', error);
+      });
+  } catch (error) {
+    console.warn('Unable to post summary to chat:', error);
+  }
 }
 
 function handleSubmissionFailure(error) {
