@@ -3,7 +3,7 @@
 const LIFF_ID = '2011290422-74faHbOe';
 // Trailing "?" so the encoded status message can be appended directly.
 const LINE_OA_CHAT_URL =
-  'https://line.me/R/oaMessage/%40442pdsyg/?';
+  'https://line.me/R/oaMessage/%40004uvqqf/?';
 
 // This is your Apps Script Web App's /exec URL, used ONLY as a JSON API now
 // (doPost). Update this if you redeploy and get a new URL. It does NOT need
